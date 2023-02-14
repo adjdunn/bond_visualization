@@ -1,0 +1,227 @@
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 15px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .slider {
+      width: 50%;
+      margin-top: 20px;
+    }
+
+    .initial-query {
+      font-size: 26px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    #myChart {
+      width: 500px;
+      height: 300px;
+      display: block;
+    }
+
+    #descriptions {
+      font-size: 20px;
+
+    }
+
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Visualize Inverse Relationship Between Interest Rates and Bond Prices</h1>
+  <div class="container initial-query">
+    <div>Enter the interest rate (yield) at which you purchase the bond.</div>
+    <form id="form">
+      <input type="text" id="inputValue">
+      <input type="submit" value="Submit">
+  </form>
+  </div>
+
+  <div class="container2">
+    <div id="chart-area" style="float: left; width: 50%;">
+      <center><div style="width: 80%;">
+      <canvas id="myChart" width="200px;"></canvas>
+      </div></center>
+    </div>
+    <div id="descriptions" style="float: left; width: 50%; padding-top: 15px;">
+      <div style="width: 80%;">
+        <div class="text-description"></div>
+        <br>
+        <div class="text-description2"></div>
+        <div class="text-description3"></div>
+      </div>
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+
+
+  <div class="container">
+    <br>
+    <div id="sliderValue">Current Interest Rate: </div>
+    <input type="range" min="0" max="20" class="slider" id="slider" value="0">
+    <br>
+    
+  </div>
+
+  <div class="container">
+    <br>
+    <div id="sliderTimeValue">Years to Maturity: 10</div>
+    <input type="range" min="0" max="30" class="slider" id="slider_time" value="10">
+    <br>
+    
+  </div>
+
+
+
+  <script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Bond Price per $100 Face Value'],
+        datasets: [{
+          label: 'Data',
+          data: [0],
+          backgroundColor: 'blue'
+        }]
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Approximate Change in Bond Price'
+        },
+        plugins: {
+          datalabels: {
+            display: 'auto',
+            color: 'white',
+            align: 'center',
+            font: {
+              size: 16
+            },
+            formatter: function(value) {
+              return '$' + value;
+            }
+          }
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true,
+              max: 200,
+              stepSize: 20,
+              callback: function(value, index, values) {
+                return "$" + value;
+              }
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Bond Price ($)'
+            }
+          }],
+      xAxes: [{
+        barPercentage: 0.5,
+        categoryPercentage: 0.5
+      }]
+
+        },
+        legend: {
+          display: false
+        }
+
+
+
+
+      }
+    });
+
+  </script>
+
+<!--   <script>
+
+    function() {
+      var price = Math.round((inputValue.value * ((1 - Math.pow((1 + (current_rate/100)), -10)) / (current_rate/100))) + (100 / Math.pow((1 + (current_rate/100)), 10)))
+      chart.data.datasets[0].data[0] = price;
+      chart.update();
+      document.querySelector('.text-description2').innerHTML = current_rate;
+
+    };
+
+  </script> -->
+
+<script>
+
+    function calculatePrice(inputValue, current_rate, time_val) {
+      var price = Math.round((inputValue * ((1 - Math.pow((1 + (current_rate/100)), -time_val)) / (current_rate/100))) + (100 / Math.pow((1 + (current_rate/100)), time_val)))
+      
+      if (current_rate == 0) {
+        price = (time_val * inputValue + 100);
+      };
+
+      return price;
+    }
+
+    slider.addEventListener('input', function() {
+      current_rate = this.value;
+      // var price = Math.round((inputValue.value * ((1 - Math.pow((1 + (this.value/100)), -time_val)) / (this.value/100))) + (100 / Math.pow((1 + (this.value/100)), time_val)))
+
+      // if (current_rate == 0) {
+      //   price = (time_val * inputValue.value + 100);
+      // };
+
+      var price = calculatePrice(inputValue.value, current_rate, time_val);
+
+      chart.data.datasets[0].data[0] = price;
+      chart.update();
+      document.getElementById('sliderValue').innerHTML = 'Current Interest Rate: ' + this.value + '%';
+      // document.querySelector('.text-description2').innerHTML = current_rate;
+      // document.querySelector('.text-description3').innerHTML = time_val;
+    });
+    
+
+
+
+    
+    slider_time.addEventListener('input', function() {
+      time_val = this.value;
+      var price = calculatePrice(inputValue.value, current_rate, time_val);
+      chart.data.datasets[0].data[0] = price;
+      chart.update();
+      document.getElementById('sliderTimeValue').innerHTML = 'Years to Maturity: ' + time_val;
+      
+    });
+    let time_val = 10;
+    // let current_rate = inputValue.value;
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const inputValue = document.getElementById('inputValue').value;
+
+      slider.value = inputValue;
+      chart.data.datasets[0].data[0] = 100;
+      chart.update();
+      document.getElementById('sliderValue').innerHTML = 'Current Interest Rate: ' + inputValue + '%';
+
+      var coupon = inputValue
+
+      document.querySelector('.text-description').innerHTML = 'The interest rate at which the bond is purchased is ' + inputValue + '%. <br><br>This means that for every $100 you would receive a fixed annualized interest payment of ' + '$' + coupon + ' until the maturity date of the bond. <br><br>This interest payment is fixed over the life of the bond.';
+      document.querySelector('.text-description2').innerHTML = '';
+    });
+
+
+
+  </script>
+</body>
+</html>
